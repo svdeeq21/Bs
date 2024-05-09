@@ -16,7 +16,10 @@ class Paper {
     rotating = false;
     
     init(paper) {
-        // Event listeners for touch events
+        // Event listeners for both mouse and touch events
+        document.addEventListener('mousemove', this.handleMove.bind(this));
+        document.addEventListener('mouseup', this.handleRelease.bind(this));
+        paper.addEventListener('mousedown', this.handleHold.bind(this));
         document.addEventListener('touchmove', this.handleMove.bind(this), { passive: false });
         document.addEventListener('touchend', this.handleRelease.bind(this), { passive: false });
         paper.addEventListener('touchstart', this.handleHold.bind(this), { passive: false });
@@ -28,8 +31,13 @@ class Paper {
     handleMove(e) {
         if (!this.holdingPaper || this.rotating) return;
 
-        this.touchMoveX = e.touches[0].clientX;
-        this.touchMoveY = e.touches[0].clientY;
+        if (e.type === 'mousemove') {
+            this.touchMoveX = e.clientX;
+            this.touchMoveY = e.clientY;
+        } else if (e.type === 'touchmove') {
+            this.touchMoveX = e.touches[0].clientX;
+            this.touchMoveY = e.touches[0].clientY;
+        }
 
         this.velX = this.touchMoveX - this.prevTouchX;
         this.velY = this.touchMoveY - this.prevTouchY;
@@ -46,11 +54,18 @@ class Paper {
     handleHold(e) {
         if (this.holdingPaper) return;
         this.holdingPaper = true;
-        this.touchStartX = e.touches[0].clientX;
-        this.touchStartY = e.touches[0].clientY;
-        this.prevTouchX = this.touchStartX;
-        this.prevTouchY = this.touchStartY;
-        this.rotating = false;
+        if (e.type === 'mousedown') {
+            this.touchStartX = e.clientX;
+            this.touchStartY = e.clientY;
+            this.prevTouchX = this.touchStartX;
+            this.prevTouchY = this.touchStartY;
+        } else if (e.type === 'touchstart') {
+            this.touchStartX = e.touches[0].clientX;
+            this.touchStartY = e.touches[0].clientY;
+            this.prevTouchX = this.touchStartX;
+            this.prevTouchY = this.touchStartY;
+        }
+        this.rotating = (e.type === 'contextmenu');
     }
     
     handleRelease() {
